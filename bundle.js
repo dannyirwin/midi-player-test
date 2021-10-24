@@ -2032,6 +2032,9 @@ const fileInputElement = document.querySelector('input[type=file]');
 const playButtonElement = document.querySelector('#play-button');
 const pauseButtonElement = document.querySelector('#pause-button');
 
+const soundfountUrl = 'acoustic_grand_piano';
+// 'https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/MusyngKite/acoustic_guitar_nylon-mp3.js';
+
 fileInputElement.addEventListener('change', () => {
   loadFile();
   playButtonElement.removeAttribute('disabled');
@@ -2066,10 +2069,7 @@ const stop = () => {
   playButtonElement.innerHTML = 'Play';
 };
 
-Soundfont.instrument(
-  audioContext,
-  'https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/MusyngKite/acoustic_guitar_nylon-mp3.js'
-).then(instrument => {
+Soundfont.instrument(audioContext, soundfountUrl).then(instrument => {
   loadFile = async () => {
     Player.stop();
 
