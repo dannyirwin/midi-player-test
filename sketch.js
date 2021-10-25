@@ -1,12 +1,14 @@
 const radius = 390;
 const maxMarbleSize = 20;
-const minMarbleSize = 5;
-const octaveHeight = radius * 0.9;
+const minMarbleSize = 6;
+const octaveHeight = radius * 0.95;
 const baseSpeed = 0.05;
 const marbleChaosFactor = 100;
 const maxMarbleAmp = 5;
 const minAge = 0;
 const maxAge = 1;
+
+let destroyOnSustain = true;
 
 let sustainValue = 0;
 
@@ -26,7 +28,7 @@ const center = { x: 0, y: 0 };
 let objects = [];
 
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(windowHeight, windowHeight);
   center.x = width / 2;
   center.y = height / 2;
   background(0);
@@ -41,11 +43,22 @@ function setup() {
     handleExternalMidiEvent(e.detail);
   });
 
+  document.addEventListener('stop', e => {
+    objects = [];
+  });
+
+  const allowDestructionElement = document.querySelector(
+    '#allowDestructionButton'
+  );
+  allowDestructionElement.addEventListener('change', () => {
+    destroyOnSustain = !destroyOnSustain;
+    console.log(destroyOnSustain);
+  });
+
   ////
   //Setting up MIDI
   ////
   WebMidi.enable(function (err) {
-    //check if WebMidi.js is enabled
     if (err) {
       console.log('WebMidi could not be enabled.', err);
     } else {
@@ -53,13 +66,20 @@ function setup() {
     }
 
     //Choose an input port
-    inputSoftware = WebMidi?.inputs[0];
-    //The 0 value is the first value in the array
+    inputSoftware = WebMidi.inputs[0];
 
-    //listen to all incoming "note on" input events
+    //listen to all incoming input events
     inputSoftware &&
-      inputSoftware.addListener('all', function (e) {
-        handleMidiEvent(e);
+      inputSoftware.addListener('noteon', 'all', function (e) {
+        const note = e.note;
+        note.velocity = e.velocity;
+        handleNoteOn(note);
+      });
+    inputSoftware &&
+      inputSoftware.addListener('noteoff', 'all', function (e) {
+        const note = e.note;
+        note.velocity = e.velocity;
+        handleNoteOff(note);
       });
   });
 }
@@ -128,15 +148,20 @@ function handleNoteOff(note) {
 function handleControllerChange(event) {
   sustainValue = event.value;
   if (sustainValue === 0) {
-    objects = objects.filter(object => {
-      return object.isActive;
-    });
+    if (destroyOnSustain) {
+      objects = objects.filter(object => object.isActive);
+    } else {
+      const activeObjects = objects.filter(object => {
+        return object.isActive;
+      });
+      activeObjects.forEach(object => (object.isActive = false));
+    }
   }
 }
 
 function generateMarble(note) {
   const marbleRadius =
-    (note.number / 90) * octaveHeight + (radius - octaveHeight);
+    ((note.number - 8) / 108) * octaveHeight + (radius - octaveHeight);
   const Marble = {
     noteNumber: note.number,
     noteVelocity: note.velocity,
@@ -164,9 +189,9 @@ function generateMarble(note) {
     Marble.ageUp();
   };
   Marble.draw = function (size = Marble.size) {
-    const color = Marble.isActive ? 'yellow' : 'grey';
+    const color = Marble.isActive ? 'yellow' : 'lightgrey';
     stroke(color);
-    strokeWeight(size);
+    strokeWeight(size + (Marble.isActive ? 2 : 0));
     point(Marble.position);
   };
   Marble.move = function () {

@@ -2029,8 +2029,18 @@ let Player = new MidiPlayer.Player();
 
 const audioContext = new AudioContext() || new webkitAudioContext();
 const fileInputElement = document.querySelector('input[type=file]');
-const playButtonElement = document.querySelector('#play-button');
-const pauseButtonElement = document.querySelector('#pause-button');
+const playButtonElement = document.querySelector('#playButton');
+const pauseButtonElement = document.querySelector('#pauseButton');
+const defaultSongsElement = document.querySelector('#defaultSongs');
+
+const defaultSongs = [
+  {
+    name: 'Claire De Lune',
+    path: './cdl.midi'
+  }
+];
+
+let defaultSong = defaultSongs[0];
 
 const soundfountUrl = 'acoustic_grand_piano';
 // 'https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/MusyngKite/acoustic_guitar_nylon-mp3.js';
@@ -2049,12 +2059,24 @@ pauseButtonElement.addEventListener('click', () => {
   pause();
 });
 
+defaultSongs.forEach(song => {
+  const button = document.createElement('button');
+
+  button.innerHTML = song.name;
+  button.addEventListener('click', () => {
+    defaultSong = song;
+    loadFile();
+    Player.play();
+  });
+  button.onclick = defaultSongsElement.appendChild(button);
+});
+
 const play = () => {
   Player.play();
   playButtonElement.innerHTML = 'Stop';
   pauseButtonElement.innerHTML = 'Pause';
-
   pauseButtonElement.removeAttribute('disabled');
+  playButtonElement.removeAttribute('disabled');
 };
 
 const pause = () => {
@@ -2066,6 +2088,8 @@ const pause = () => {
 
 const stop = () => {
   Player.stop();
+  const stopEvent = new CustomEvent('stop');
+  document.dispatchEvent(stopEvent);
   playButtonElement.innerHTML = 'Play';
 };
 
@@ -2073,7 +2097,11 @@ Soundfont.instrument(audioContext, soundfountUrl).then(instrument => {
   loadFile = async () => {
     Player.stop();
 
-    const song = fileInputElement.files[0];
+    const defaultMidiFile = await fetch(defaultSong.path).then(res =>
+      res.blob()
+    );
+
+    const song = fileInputElement.files[0] || defaultMidiFile;
     const reader = new FileReader();
     song && reader.readAsArrayBuffer(song);
 

@@ -9,11 +9,17 @@
     <meta charset="utf-8" />
   </head>
   <body>
-    <input type="file" />
-    <button id="play-button" disabled>Play</button>
-    <button id="pause-button" disabled>Pause</button>
-
+    <div class="controls">
+      <label for="defaultSongs">Pick a song:</label>
+      <div id="defaultSongs" name="defaultSongs"></div>
+      <label for="fileInput">Or upload a Midi File:</label>
+      <input type="file" name="fileInput" />
+      <button id="playButton" disabled>Play</button>
+      <button id="pauseButton" disabled>Pause</button>
+      <hr />
+      <input type="checkbox" checked id="allowDestructionButton">Enable Object Destruction</input>
+    </div>
     <script src="bundle.js" defer></script>
-    <script src="sketch.js"></script>
+    <script src="sketch.js" defer></script>
   </body>
 </html>
